@@ -1,0 +1,16 @@
+#!/bin/bash
+
+GITDIR=hello.node
+ROOTDIR=~/bin/$GITDIR
+VAGRANTDIR=~/dev/env/coreos-kubernetes/multi-node/vagrant/
+
+# kubernetes service/deployment of the application
+kubectl delete service,deployment hello-node
+
+# local docker registry
+docker stop registry && docker-machine stop
+
+# halt vagrant
+cd $VAGRANTDIR && vagrant halt
+cd $ROOTDIR
+

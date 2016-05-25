@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ROOTDIR=$(pwd)
+ENVDIR=~/dev/env
+
+cd $ENVDIR && git clone https://github.com/coreos/coreos-kubernetes.git 
+
+cd $ROOTDIR
+. docker.build
+. pod
+

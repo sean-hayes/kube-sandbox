@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# update mac package manager
+brew update
+
+# Virtual Box (VM)
+# VM CLI (vagrant)
+# menubar VM manager
+brew cask install virtualbox
+brew cask install vagrant
+brew cask install vagrant-manager
+
+# Containers to talk to CoreOS VM
+brew cask install dockertoolbox
+
+# distributed kv store (ctl part of the build)
+brew install etcd
+
+# cluster init system
+brew install fleetctl
+
+# container cluser management
+brew install kubernetes-cli

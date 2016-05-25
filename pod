@@ -1,0 +1,56 @@
+#!/bin/bash
+#http://kubernetes.io/docs/hellonode/#create-your-nodejs-application
+
+ROOTDIR=$(pwd)
+VAGRANTDIR=~/dev/env/coreos-kubernetes/multi-node/vagrant/
+
+# vagrant up
+cd $VAGRANTDIR && vagrant up && cd $ROOTDIR
+vagrant global-status && read -p "Press any key to continue... " -n1 -s
+
+# create a pod and deployment
+kubectl run hello-node --image=192.168.99.100:5000/hello-node:v1 --port=8080
+
+# view results
+kubectl get pods
+kubectl get deployments
+
+# expose the port outside the cluster (a service)
+# needs a load balance
+kubectl expose deployment hello-node --type="NodePort"
+kubectl get service
+
+# determine the nodePort
+NODEPORT=$(kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services hello-node)
+# determine master (cluster external ip)
+#TODO: find simpler - kubectl get pods -l run=my-nginx -o yaml | grep podIP
+MASTER=$(kubectl cluster-info | grep master | awk -F' ' '{print $6}')
+MASTERIP=$(kubectl cluster-info | grep master | awk -F' ' '{print $6}' | awk -F'//' '{print $2}' | awk -F':' '{print $1}')
+
+# test
+curl -X GET http://$MASTERIP:$NODEPORT/
+
+#scale and explore
+kubectl scale deployment hello-node --replicas=4
+kubectl get deployment
+kubectl get pods
+
+# deploy an update
+docker start registry
+docker build -t hello-node:v2 .
+docker tag hello-node:v2 localhost:5000/hello-node:v2
+docker push localhost:5000/hello-node:v2
+
+# edit the live deployment
+#  update the "spec.template.spec.containers.image"
+kubectl edit deployment hello-node
+
+# watch as it slowly cycles the old out and new in - no interruptions to users
+kubectl get deployments
+
+# tear down
+#kubectl delete service,deployment hello-node
+#docker stop registry && docker-machine stop
+
+#cd ~/dev/env/coreos-kubernetes/multi-node/vagrant/ && vagrant halt
+#cd ~/bin/hello.node/

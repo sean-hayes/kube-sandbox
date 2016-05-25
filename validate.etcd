@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# etcd is running
+kubectl get cs
+
+# on e1 node
+etcdctl --debug ls /
+
+# etcd tests
+etcdctl set first-etcd-key "Hello World"
+etcdctl get first-etcd-key
+
+etcdctl ls
+etcdctl get /coreos.com/network/config
+
+# on e1 node, discover the endpoint
+etcdctl --debug ls /
+
+curl -X GET http://172.17.4.51:2379/v2/keys/?quorum=false&recursive=false&sorted=false
+curl -L http://172.17.4.51:2379/v2/keys/first-etcd-key
+
+
+# TTL test
+curl -L -X PUT http://172.17.4.51:2379/v2/keys/ttl-key?ttl=20 -d value=bar
+curl -L http://172.17.4.51:2379/v2/keys/ttl-key
+
+# parse the JSON query
+curl -s http://172.17.4.51:2379/v2/keys/first-etcd-key | jq '.'
+curl -s http://172.17.4.51:2379/v2/keys/first-etcd-key | jq '.node.value'
